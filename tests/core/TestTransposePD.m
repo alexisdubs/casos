@@ -4,8 +4,8 @@
 %
 % SPDX-License-Identifier: GPL-3.0-only
 
-classdef TestTranspose < TestPolynomialOperations
-% Test transpose.
+classdef (TestTags="PD") TestTransposePD < TestPolynomialOperations
+% Test transpose on constant polynomials.
 
 properties (SetAccess=protected)
     values       % test polynomials
@@ -28,30 +28,40 @@ end
 methods (Test, ParameterCombination="pairwise", TestTags=["vector" "column"])
     function test_transpose_column(test_case, dim)
         % Test transpose on column vectors.
-        actual = transpose(test_case.values.vector{1,dim});
+        value = test_case.values.vector{1,dim};
+        
         reference = test_case.references.column{dim};
 
-        % perform assertion
-        test_case.verifyEqualPolynomial(actual,reference,"RelTol",1e-15);
+        test_case.evaluate_transpose(value,reference);
     end
 end
 
 methods (Test, ParameterCombination="pairwise", TestTags=["vector" "row"])
     function test_transpose_row(test_case, dim)
         % Test transpose on row vectors.
-        actual = transpose(test_case.values.vector{2,dim}');
+        value = test_case.values.vector{2,dim}';
+        
         reference = test_case.references.row{dim};
 
-        % perform assertion
-        test_case.verifyEqualPolynomial(actual,reference,"RelTol",1e-15);
+        test_case.evaluate_transpose(value,reference);
     end
 end
 
 methods (Test, ParameterCombination="pairwise", TestTags="matrix")
     function test_transpose_matrix(test_case, dim)
         % Test transpose on matrix values.
-        actual = transpose(test_case.values.matrix{3,dim});
+        value = test_case.values.matrix{3,dim};
+
         reference = test_case.references.matrix{dim};
+
+        test_case.evaluate_transpose(value,reference);
+    end
+end
+
+methods
+    function evaluate_transpose(test_case, value, reference)
+        % Evaluate transpose.
+        actual = transpose(value);
 
         % perform assertion
         test_case.verifyEqualPolynomial(actual,reference,"RelTol",1e-15);

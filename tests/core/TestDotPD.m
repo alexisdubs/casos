@@ -4,8 +4,8 @@
 %
 % SPDX-License-Identifier: GPL-3.0-only
 
-classdef TestDot < TestPolynomialOperations
-% Test dot operation.
+classdef (TestTags="PD") TestDotPD < TestPolynomialOperations
+% Test dot product on constant polynomials.
 
 properties (SetAccess=protected)
     values       % test polynomials
@@ -21,7 +21,7 @@ end
 
 methods (TestClassSetup)
     function initializeTestData(test_case)
-        % Initialize test data for dot operations.
+        % Initialize test data for dot product.
         test_case.loadTestData("dot");
 
         test_case.fatalAssertLength(test_case.dim1,size(test_case.references.matrix.dot,1));
@@ -32,33 +32,41 @@ methods (TestClassSetup)
 end
 
 methods (Test, ParameterCombination="pairwise", TestTags="scalar")
-    function test_dot(test_case, arg1, arg2)
-        % Test dot operation on scalar values.
-        actual = dot(test_case.values.scalar{1,arg1},test_case.values.scalar{2,arg2});
+    function test_dot_scalar(test_case, arg1, arg2)
+        % Test dot product on scalars.
+        value1 = test_case.values.scalar{1,arg1};
+        value2 = test_case.values.scalar{2,arg2};
+
         reference = test_case.references.scalar.dot{arg1,arg2};
 
-        % perform assertion
-        test_case.verifyClass(actual,?casadi.DM);
-        test_case.verifyEqual(full(actual),reference,"RelTol",1e-15);
+        test_case.evaluate_dot(value1,value2,reference);
     end
 end
 
 methods (Test, ParameterCombination="pairwise", TestTags="matrix")
     function test_dot_matrix(test_case, dim1, dim2)
-        % Test dot operation on matrix values.
-        val1 = test_case.values.matrix{1,dim1};
-        val2 = test_case.values.matrix{2,dim2};
+        % Test dot product on matrices.
+        value1 = test_case.values.matrix{1,dim1};
+        value2 = test_case.values.matrix{2,dim2};
 
-        if ~isequal(size(val1), size(val2))
+        reference = test_case.references.matrix.dot{dim1,dim2};
+
+        test_case.evaluate_dot(value1,value2,reference);
+    end
+end
+
+methods
+    function evaluate_dot(test_case, value1, value2, reference)
+        % Evaluate dot product.
+        if ~isequal(size(value1), size(value2))
             % size mismatch
-            diagtext = sprintf('Dimension mismatch expected: %s vs. %s.',mat2str(size(val1)),mat2str(size(val2)));
-            test_case.verifyError(@() dot(val1,val2),?MException,diagtext);
+            diagtext = sprintf('Dimension mismatch expected: %s vs. %s.',mat2str(size(value1)),mat2str(size(value2)));
+            test_case.verifyError(@() dot(value1,value2),?MException,diagtext);
             return
         end
 
         % else
-        actual = dot(val1,val2);
-        reference = test_case.references.matrix.dot{dim1,dim2};
+        actual = dot(value1,value2);
 
         % perform assertion
         test_case.verifyClass(actual,?casadi.DM);

@@ -4,8 +4,8 @@
 %
 % SPDX-License-Identifier: GPL-3.0-only
 
-classdef TestSum < TestPolynomialOperations
-% Test matrix sum.
+classdef (TestTags="PS") TestSumPS < TestSymbolicOperations
+% Test matrix sum on symbolic polynomials.
 
 properties (SetAccess=protected)
     values       % test polynomials
@@ -14,6 +14,7 @@ end
 
 properties (TestParameter)
     par = {1 2};
+
     dim = num2cell(1:6);
 end
 
@@ -30,39 +31,57 @@ end
 methods (Test, ParameterCombination="pairwise", TestTags=["vector" "column"])
     function test_sum_column(test_case, dim)
         % Test sum of column vectors.
-        actual = sum(test_case.values.vector{1,dim});
+        value = test_case.values.vector{1,dim};
+        
         reference = test_case.references.vector.column{dim};
 
-        % perform assertion
-        test_case.verifyEqualPolynomial(actual,reference,"RelTol",1e-15);
+        test_case.evaluate_sum(value,reference);
     end
 end
 
 methods (Test, ParameterCombination="pairwise", TestTags=["vector" "row"])
     function test_sum_row(test_case, dim)
         % Test sum of row vectors.
-        actual = sum(test_case.values.vector{2,dim}'); %#ok<UDIM>
+        value = test_case.values.vector{2,dim}';
+
         reference = test_case.references.vector.row{dim};
 
-        % perform assertion
-        test_case.verifyEqualPolynomial(actual,reference,"RelTol",1e-15);
+        test_case.evaluate_sum(value,reference);
     end
 end
 
 methods (Test, ParameterCombination="pairwise", TestTags="matrix")
     function test_sum_matrix_dim(test_case, dim, par)
         % Test sum of matrix along dimension.
-        actual = sum(test_case.values.matrix{par,dim},par);
+        value = test_case.values.matrix{par,dim};
+        
         reference = test_case.references.matrix.dim{dim,par};
 
-        % perform assertion
-        test_case.verifyEqualPolynomial(actual,reference,"RelTol",1e-15);
+        test_case.evaluate_sum(value,reference,par);
     end
 
     function test_sum_matrix_all(test_case, dim)
         % Test sum of all elements in matrix.
-        actual = sum(test_case.values.matrix{3,dim},'all');
+        value = test_case.values.matrix{3,dim};
+        
         reference = test_case.references.matrix.all{dim};
+
+        test_case.evaluate_sum(value,reference,'all');
+    end
+end
+
+methods
+    function evaluate_sum(test_case, value, reference, varargin)
+        % Evaluate sum of matrix.
+
+        % symbolic polynomial
+        [p,symbol,argument] = test_case.get_operand(true,value);
+
+        % build symbolic function
+        expression = sum(p,varargin{:});
+        f = casos.Function('f',symbol,{expression});
+
+        actual = f(argument{:});
 
         % perform assertion
         test_case.verifyEqualPolynomial(actual,reference,"RelTol",1e-15);

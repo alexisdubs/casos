@@ -4,8 +4,8 @@
 %
 % SPDX-License-Identifier: GPL-3.0-only
 
-classdef TestProject < TestPolynomialOperations
-% Test project operation.
+classdef (TestTags="PD") TestProjectPD < TestPolynomialOperations
+% Test project operation on constant polynomials.
 
 properties (SetAccess=protected)
     values       % test polynomials
@@ -32,16 +32,14 @@ methods (TestClassSetup)
 end
 
 methods (Test, ParameterCombination="pairwise", TestTags="scalar")
-    function test_project(test_case, arg1, arg2)
+    function test_project_scalar(test_case, arg1, arg2)
         % Test project operation.
         value = test_case.values.scalar{1,arg1};
         basis = sparsity(test_case.values.scalar{2,arg2});
 
-        actual = project(value,basis);
         reference = test_case.references.scalar{arg1,arg2};
 
-        % perform assertion
-        test_case.verifyEqualPolynomial(actual,reference,"RelTol",1e-15);
+        test_case.evaluate_project(value,basis,reference);
     end
 end
 
@@ -51,19 +49,9 @@ methods (Test, ParameterCombination="pairwise", TestTags=["vector" "column"])
         value = test_case.values.vector{1,dim1};
         basis = sparsity(test_case.values.vector{2,dim2});
         
-        if ~isequal(size(value),size(basis))
-            % size mismatch
-            diagtext = sprintf('Dimension mismatch expected: %s vs. %s.',mat2str(size(value)),mat2str(size(basis)));
-            test_case.verifyError(@() project(value,basis),?MException,diagtext);
-            return
-        end
-
-        % else
-        actual = project(value,basis);
         reference = test_case.references.column{dim1,dim2};
 
-        % perform assertion
-        test_case.verifyEqualPolynomial(actual,reference,"RelTol",1e-15);
+        test_case.evaluate_project(value,basis,reference);
     end
 end
 
@@ -73,19 +61,9 @@ methods (Test, ParameterCombination="pairwise", TestTags=["vector" "row"])
         value = test_case.values.vector{1,dim1}';
         basis = sparsity(test_case.values.vector{2,dim2}');
         
-        if ~isequal(size(value),size(basis))
-            % size mismatch
-            diagtext = sprintf('Dimension mismatch expected: %s vs. %s.',mat2str(size(value)),mat2str(size(basis)));
-            test_case.verifyError(@() project(value,basis),?MException,diagtext);
-            return
-        end
-
-        % else
-        actual = project(value,basis);
         reference = test_case.references.row{dim1,dim2};
 
-        % perform assertion
-        test_case.verifyEqualPolynomial(actual,reference,"RelTol",1e-15);
+        test_case.evaluate_project(value,basis,reference);
     end
 end
 
@@ -95,6 +73,15 @@ methods (Test, ParameterCombination="pairwise", TestTags="matrix")
         value = test_case.values.matrix{1,dim1};
         basis = sparsity(test_case.values.matrix{2,dim2});
         
+        reference = test_case.references.matrix{dim1,dim2};
+
+        test_case.evaluate_project(value,basis,reference);
+    end
+end
+
+methods
+    function evaluate_project(test_case, value, basis, reference)
+        % Evaluate projection.
         if ~isequal(size(value),size(basis))
             % size mismatch
             diagtext = sprintf('Dimension mismatch expected: %s vs. %s.',mat2str(size(value)),mat2str(size(basis)));
@@ -104,8 +91,7 @@ methods (Test, ParameterCombination="pairwise", TestTags="matrix")
 
         % else
         actual = project(value,basis);
-        reference = test_case.references.matrix{dim1,dim2};
-
+        
         % perform assertion
         test_case.verifyEqualPolynomial(actual,reference,"RelTol",1e-15);
     end

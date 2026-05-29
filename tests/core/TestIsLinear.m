@@ -4,11 +4,12 @@
 %
 % SPDX-License-Identifier: GPL-3.0-only
 
-classdef TestIsLinear < TestSymbolicOperations
+classdef (TestTags="PS") TestIsLinear < TestSymbolicOperations
 % Test is_linear of symbolic operations.
 
 properties (SetAccess=protected)
     values       % test polynomials
+    references = [];    % no references
 end
 
 properties (TestParameter)
@@ -36,24 +37,24 @@ methods (TestClassSetup)
 end
 
 methods (Test, ParameterCombination="pairwise", TestTags="scalar")
-    function test_unary(test_case, op1, symb1, arg1)
-        % Test is_linear of a unary operation.
+    function test_unary_scalar(test_case, op1, symb1, arg1)
+        % Test is_linear of a unary operation on scalars.
         val1 = test_case.values.scalar{1,arg1};
         val2 = test_case.values.scalar{2,arg1};
         
         test_case.evaluate_unary(op1,symb1,val1,val2);
     end
 
-    function test_bilinear(test_case, op2, symb1, arg1)
-        % Test is_linear of a bilinear operation.
+    function test_bilinear_scalar(test_case, op2, symb1, arg1)
+        % Test is_linear of a bilinear operation on scalars.
         val1 = test_case.values.scalar{1,arg1};
         val2 = test_case.values.scalar{2,arg1};
 
         test_case.evaluate_bilinear(op2,symb1,val1,val2,false);
     end
 
-    function test_binary(test_case, op2, symb1, symb2, arg1, arg2)
-        % Test is_linear of a binary operation.
+    function test_binary_scalar(test_case, op2, symb1, symb2, arg1, arg2)
+        % Test is_linear of a binary operation on scalars.
         val1 = test_case.values.scalar{1,arg1};
         val2 = test_case.values.scalar{2,arg2};
         val3 = test_case.values.scalar{arg1+arg2};
@@ -144,13 +145,7 @@ end
 methods 
     function evaluate_unary(test_case, op1, symb1, val1, val2)
         % Evaluate unary operation.
-        if (symb1)
-            % symbolic operand
-            p = casos.PS.sym('p',sparsity(val1));
-        else
-            % numeric operand
-            p = val1;
-        end
+        p = test_case.get_operand(symb1,val1);
 
         % symbolic polynomial
         x = casos.PS.sym('x',sparsity(val2));
@@ -174,13 +169,8 @@ methods
 
     function evaluate_bilinear(test_case, op2, symb1, val1, val2, trans)
         % Evaluate bilinear operation.
-        if (symb1)
-            % symbolic operand
-            p = casos.PS.sym('p',sparsity(val1));
-        else
-            % numeric operand
-            p = val1;
-        end
+        p = test_case.get_operand(symb1,val1);
+
         if (trans)
             % transpose first argument
             p1 = p';
@@ -212,21 +202,8 @@ methods
 
     function evaluate_binary(test_case, op2, symb1, symb2, val1, val2, val3)
         % Evaluate binary operation.
-        if (symb1)
-            % symbolic operand
-            p = casos.PS.sym('p',sparsity(val1));
-        else
-            % numeric operand
-            p = val1;
-        end
-
-        if (symb2)
-            % symbolic operand
-            q = casos.PS.sym('q',sparsity(val2));
-        else
-            % numeric operand
-            q = val2;
-        end
+        p = test_case.get_operand(symb1,val1);
+        q = test_case.get_operand(symb2,val2);
 
         % symbolic polynomial
         x = casos.PS.sym('x',sparsity(val3));
