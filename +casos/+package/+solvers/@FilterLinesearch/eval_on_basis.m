@@ -122,6 +122,14 @@ stats.initTime = toc(initTimeMeas);
 
 while iter <= obj.opts.max_iter
 
+    % --- LOCAL PATCH: record iterate-level metrics in a parallel field
+    %     that the convex sub-solver's stats overwrite (in solve_Q_SDP)
+    %     does NOT touch.  Stored under iter index (matches the iter-1
+    %     value printed by the next line).
+    stats.iterate_log{iter}.iter_idx_printed = iter - 1;
+    stats.iterate_log{iter}.f_x_k            = f_x_k;
+    stats.iterate_log{iter}.theta_x_k        = theta_x_k;
+
     % display output header every 10th iteration
     if ~mod(iter,10) && iter > 0
         printf(obj.log,'debug','%-8s%-15s%-15s%-15s%-15s%-10s%-10s\n', 'iter', 'obj', ['||' char(916) 'x'  '||_inf'], ['||' char(916) char(955)  '||_inf'], [char(920) '(x_k)'],char(945),'||dLdx||');
